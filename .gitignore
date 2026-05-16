@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project-specific generated artifacts
+artifacts/
+data/external/
+mlruns/
+great_expectations/uncommitted/
+
+# Notebook exports
+notebooks/*.html
+notebooks/*.nbconvert.ipynb
