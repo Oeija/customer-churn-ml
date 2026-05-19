@@ -226,3 +226,4 @@ great_expectations/uncommitted/
 # Notebook exports
 notebooks/*.html
 notebooks/*.nbconvert.ipynb
+src/customer_churn_ml/serving/model/
