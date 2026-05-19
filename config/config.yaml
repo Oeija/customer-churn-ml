@@ -1,0 +1,139 @@
+# Project root is inferred relative to this file
+paths:
+  raw_data: "data/raw/telco-customer-churn-raw.csv"
+  processed_dir: "data/processed"
+  serving_model_dir: "src/customer_churn_ml/serving/model"
+
+features:
+  target: "churn"
+  drop_columns:
+    - "customer_id"
+  numeric:
+    - "tenure"
+    - "monthly_charges"
+    - "total_charges"
+    - "senior_citizen"
+    - "num_services"
+    - "avg_monthly_charge"
+  binary:
+    - "gender"
+    - "partner"
+    - "dependents"
+    - "phone_service"
+    - "paperless_billing"
+    - "has_internet"
+    - "has_phone"
+  categorical:
+    - "multiple_lines"
+    - "internet_service"
+    - "online_security"
+    - "online_backup"
+    - "device_protection"
+    - "tech_support"
+    - "streaming_tv"
+    - "streaming_movies"
+    - "contract"
+    - "payment_method"
+    - "tenure_group"
+
+  binary_map:
+    gender:
+      "Male": 1
+      "Female": 0
+    partner:
+      "Yes": 1
+      "No": 0
+    dependents:
+      "Yes": 1
+      "No": 0
+    phone_service:
+      "Yes": 1
+      "No": 0
+    paperless_billing:
+      "Yes": 1
+      "No": 0
+
+  categorical_expected_values:
+    gender: ["Female", "Male"]
+    partner: ["No", "Yes"]
+    dependents: ["No", "Yes"]
+    phone_service: ["No", "Yes"]
+    multiple_lines: ["No", "No phone service", "Yes"]
+    internet_service: ["DSL", "Fiber optic", "No"]
+    online_security: ["No", "No internet service", "Yes"]
+    online_backup: ["No", "No internet service", "Yes"]
+    device_protection: ["No", "No internet service", "Yes"]
+    tech_support: ["No", "No internet service", "Yes"]
+    streaming_tv: ["No", "No internet service", "Yes"]
+    streaming_movies: ["No", "No internet service", "Yes"]
+    contract: ["Month-to-month", "One year", "Two year"]
+    paperless_billing: ["No", "Yes"]
+    payment_method:
+      - "Bank transfer (automatic)"
+      - "Credit card (automatic)"
+      - "Electronic check"
+      - "Mailed check"
+    tenure_group: ["0-12", "13-24", "25-48", "49-72"]
+    churn: ["No", "Yes"]
+
+feature_engineering:
+  tenure_bins:
+    bins: [0, 12, 24, 48, 72]
+    labels: ["0-12", "13-24", "25-48", "49-72"]
+    include_lowest: true
+    right: true
+  service_columns:
+    - "online_security"
+    - "online_backup"
+    - "device_protection"
+    - "tech_support"
+    - "streaming_tv"
+    - "streaming_movies"
+  add_has_internet: true
+  add_has_phone: true
+
+preprocessing:
+  imputer_strategy: "median"
+  scaler: true
+  onehot_drop: "first"
+  onehot_sparse: false
+  onehot_handle_unknown: "ignore"
+
+models:
+  active: ["xgboost"]  # options: random_forest, lightgbm, xgboost
+  random_forest:
+    n_estimators: 300
+    class_weight: "balanced"
+    random_state: 42
+    n_jobs: -1
+  lightgbm:
+    n_estimators: 500
+    learning_rate: 0.05
+    class_weight: "balanced"
+    random_state: 42
+    n_jobs: -1
+    verbosity: -1
+  xgboost:
+    n_estimators: 500
+    learning_rate: 0.05
+    max_depth: 6
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+    n_jobs: -1
+    eval_metric: "logloss"
+    # scale_pos_weight is computed dynamically from y_train
+
+  threshold: 0.30
+  thresholds_to_evaluate: [0.25, 0.30, 0.35, 0.40, 0.45, 0.50]
+
+mlflow:
+  experiment_name: "Telco Churn - Production"
+  artifact_paths:
+    full_pipeline: "preprocessor-and-model"
+    raw_model: "model"
+
+split:
+  test_size: 0.2
+  random_state: 42
+  stratify: true
