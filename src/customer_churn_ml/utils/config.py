@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 import yaml
@@ -34,11 +33,5 @@ def load_config(config_path: str = "config/config.yaml") -> dict:
         if key in ("raw_data",) and not abs_path.exists():
             raise FileNotFoundError(f"Required path '{key}' does not exist: {abs_path}")
         config["paths"][key] = str(abs_path)
-
-    # Resolve MLflow URI to absolute (default to project-local mlruns)
-    mlflow_cfg = config.setdefault("mlflow", {})
-    mlruns = mlflow_cfg.get("mlruns_uri", "")
-    if not mlruns or mlruns.startswith("file://./"):
-        mlflow_cfg["mlruns_uri"] = f"file://{PROJECT_ROOT}/mlruns"
 
     return config
