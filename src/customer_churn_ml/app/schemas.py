@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -32,15 +32,39 @@ class CustomerFeatures(BaseModel):
     )
 
 
+class RecommendationItem(BaseModel):
+    """A single business recommendation derived from a churn-driving feature."""
+
+    feature: str = Field(..., description="Internal engineered feature name")
+    display_name: str = Field(..., description="Human-readable feature label")
+    shap_value: float = Field(..., description="SHAP value magnitude pushing toward churn")
+    feature_value: Any = Field(..., description="Actual feature value for this customer")
+    recommendation: str = Field(..., description="Actionable business recommendation")
+
+
 class PredictionResponse(BaseModel):
     """Output schema for a single prediction."""
 
     churn_proba: float = Field(..., description="Predicted probability of churning")
     churn_flag: int = Field(..., description="0 = predicted to stay, 1 = predicted to churn")
+    recommendations: Optional[List[RecommendationItem]] = Field(
+        None, description="Business recommendations when churn_flag=1 and explainability requested"
+    )
 
 
 class BatchPredictionResponse(BaseModel):
     """Output schema for a batch of predictions."""
 
     predictions: List[PredictionResponse]
+    threshold: float = Field(..., description="Probability threshold used for the binary flag")
+
+
+class ExplainabilityResponse(BaseModel):
+    """Output schema for the standalone /explain endpoint."""
+
+    churn_proba: float = Field(..., description="Predicted probability of churning")
+    churn_flag: int = Field(..., description="0 = predicted to stay, 1 = predicted to churn")
+    top_features: List[Dict[str, Any]] = Field(
+        ..., description="Top churn-driving features with SHAP values and recommendations"
+    )
     threshold: float = Field(..., description="Probability threshold used for the binary flag")
