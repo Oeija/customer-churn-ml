@@ -1,5 +1,3 @@
-"""Centralised logging setup."""
-
 import logging
 import sys
 
@@ -8,11 +6,11 @@ def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
     """Return a logger with a consistent format.
 
     Args:
-        name: Logger name (usually ``__name__``).
-        level: Logging level (default ``INFO``).
+        name: Logger name (usually __name__).
+        level: Logging level (default INFO).
 
     Returns:
-        Configured ``logging.Logger`` instance.
+        Configured logging.Logger instance.
     """
     logger = logging.getLogger(name)
     logger.setLevel(level)

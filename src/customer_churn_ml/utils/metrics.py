@@ -1,5 +1,3 @@
-"""Evaluation metrics and plotting helpers."""
-
 from typing import Dict, List
 
 import numpy as np
@@ -28,7 +26,7 @@ def evaluate_at_threshold(
         pos_label: Label considered positive.
 
     Returns:
-        Dictionary with ``precision``, ``recall``, ``f1``, ``roc_auc``.
+        Dictionary with precision, recall, f1, roc_auc.
     """
     y_pred = (y_proba >= threshold).astype(int)
     return {
@@ -55,7 +53,7 @@ def threshold_sweep(
 
     Returns:
         DataFrame with one row per threshold and columns
-        ``Threshold``, ``Precision``, ``Recall``, ``F1``.
+        Threshold, Precision, Recall, F1.
     """
     rows = []
     for thresh in thresholds:

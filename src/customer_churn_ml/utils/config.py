@@ -1,5 +1,3 @@
-"""Configuration loader with path validation."""
-
 import os
 from pathlib import Path
 
