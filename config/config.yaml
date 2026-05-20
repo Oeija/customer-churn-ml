@@ -2,7 +2,8 @@
 paths:
   raw_data: "data/raw/telco-customer-churn-raw.csv"
   processed_dir: "data/processed"
-  serving_model_dir: "src/customer_churn_ml/serving/model"
+  artifacts_dir: "artifacts"
+  outputs_dir: "outputs"
 
 features:
   target: "churn"
@@ -129,6 +130,8 @@ models:
 
 mlflow:
   experiment_name: "Telco Churn - Production"
+  tracking_uri: "sqlite:///mlflow.db"
+  artifact_uri: "artifacts"
   artifact_paths:
     full_pipeline: "preprocessor-and-model"
     raw_model: "model"

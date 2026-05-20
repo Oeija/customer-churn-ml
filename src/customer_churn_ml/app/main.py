@@ -49,12 +49,12 @@ async def lifespan(app: FastAPI):
     """Load preprocessor + model on startup; clear on shutdown."""
     config = load_config()
     _artifacts["config"] = config
-    model_dir = config["paths"]["serving_model_dir"]
+    artifacts_dir = config["paths"]["artifacts_dir"]
     _artifacts["threshold"] = config["models"]["threshold"]
 
-    preprocessor_path = os.path.join(model_dir, "preprocessor.joblib")
-    model_path_ubj = os.path.join(model_dir, "model.ubj")
-    model_path_json = os.path.join(model_dir, "model.json")
+    preprocessor_path = os.path.join(artifacts_dir, "preprocessor.joblib")
+    model_path_ubj = os.path.join(artifacts_dir, "model.ubj")
+    model_path_json = os.path.join(artifacts_dir, "model.json")
 
     # --- Preprocessor ---
     if os.path.exists(preprocessor_path):
@@ -75,7 +75,7 @@ async def lifespan(app: FastAPI):
         logger.info("Loaded model from %s", model_path_json)
     else:
         logger.warning(
-            "Model not found in %s. POST /predict will return 503.", model_dir
+            "Model not found in %s. POST /predict will return 503.", artifacts_dir
         )
 
     yield
@@ -97,6 +97,21 @@ def _check_artifacts():
             status_code=503,
             detail="Model artifacts not loaded. Run scripts/train.py first to generate them.",
         )
+
+
+@app.get("/")
+async def root() -> dict:
+    """API root — returns basic info and available endpoints."""
+    return {
+        "name": app.title,
+        "version": app.version,
+        "description": app.description,
+        "endpoints": {
+            "health": "/health",
+            "predict": "/predict",
+            "docs": "/docs",
+        },
+    }
 
 
 @app.get("/health")

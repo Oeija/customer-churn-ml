@@ -220,10 +220,21 @@ __marimo__/
 # Project-specific generated artifacts
 artifacts/
 data/external/
-mlruns/
+data/processed/*.parquet
+data/processed/*.csv
+!data/processed/.gitkeep
+mlflow.db
+mlrun/
 great_expectations/uncommitted/
 
 # Notebook exports
 notebooks/*.html
 notebooks/*.nbconvert.ipynb
-src/customer_churn_ml/serving/model/
+
+# Artifacts directory: keep structure but ignore generated files
+artifacts/*
+!artifacts/.gitkeep
+
+# Outputs directory: keep structure but ignore generated files
+outputs/*
+!outputs/.gitkeep

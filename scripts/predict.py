@@ -6,6 +6,7 @@ Usage:
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import joblib
@@ -22,14 +23,20 @@ from customer_churn_ml.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def main(input_path: str, output_path: str):
+def main(input_path: str, output_path: str = None):
     config = load_config()
-    model_dir = Path(config["paths"]["serving_model_dir"])
+    artifacts_dir = Path(config["paths"]["artifacts_dir"])
+    outputs_dir = Path(config["paths"].get("outputs_dir", "outputs"))
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+
+    if output_path is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = str(outputs_dir / f"predictions_{timestamp}.csv")
 
     # ------------------------------------------------------------------
     # Load artifacts
     # ------------------------------------------------------------------
-    preprocessor, model = load_artifacts(model_dir)
+    preprocessor, model = load_artifacts(artifacts_dir)
     threshold = config["models"]["threshold"]
 
     # ------------------------------------------------------------------
@@ -81,8 +88,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         type=str,
-        default="predictions.csv",
-        help="Path to write predictions CSV.",
+        default=None,
+        help="Path to write predictions CSV (defaults to outputs/predictions_YYYYMMDD_HHMMSS.csv).",
     )
     args = parser.parse_args()
     main(input_path=args.input, output_path=args.output)

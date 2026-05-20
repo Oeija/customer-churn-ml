@@ -15,6 +15,7 @@ import os
 import shutil
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
 
 import joblib
@@ -40,7 +41,7 @@ logger = get_logger(__name__)
 
 
 def _log_shap_summary(model, X_test_proc, feature_names, model_name="model"):
-    """Generate and save a SHAP summary plot; return the temp file path."""
+    """Generate a SHAP summary plot to a temp file; return the file path."""
     try:
         import shap
     except ImportError:
@@ -57,10 +58,11 @@ def _log_shap_summary(model, X_test_proc, feature_names, model_name="model"):
 
     fig, ax = plt.subplots(figsize=(10, 6))
     shap.summary_plot(shap_values, X_test_proc, feature_names=feature_names, show=False)
+
     tmp_path = tempfile.mktemp(suffix="_shap_summary.png")
     fig.savefig(tmp_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    logger.info("SHAP summary plot saved to %s", tmp_path)
+    logger.info("SHAP summary plot generated at %s", tmp_path)
     return tmp_path
 
 
@@ -75,6 +77,8 @@ def main(tune: bool = False):
     config = load_config()
     paths = config["paths"]
     model_cfg = config["models"]
+    outputs_dir = Path(paths.get("outputs_dir", "outputs"))
+    outputs_dir.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
     # 2. Ingest raw data
@@ -119,7 +123,19 @@ def main(tune: bool = False):
     )
 
     # ------------------------------------------------------------------
-    # 5. Preprocess (feature engineering → encode → ColumnTransformer)
+    # 5. Save processed data for reproducibility
+    # ------------------------------------------------------------------
+    processed_dir = Path(paths.get("processed_dir", "data/processed"))
+    processed_dir.mkdir(parents=True, exist_ok=True)
+
+    X_train.to_parquet(processed_dir / "train_features.parquet", index=False)
+    X_test.to_parquet(processed_dir / "test_features.parquet", index=False)
+    y_train.to_frame("churn").to_parquet(processed_dir / "train_labels.parquet", index=False)
+    y_test.to_frame("churn").to_parquet(processed_dir / "test_labels.parquet", index=False)
+    logger.info("Saved processed data to %s", processed_dir)
+
+    # ------------------------------------------------------------------
+    # 6. Preprocess (feature engineering → encode → ColumnTransformer)
     # ------------------------------------------------------------------
     logger.info("Building preprocessing pipeline...")
     X_train_proc, X_test_proc, feature_names = preprocess_splits(
@@ -127,7 +143,7 @@ def main(tune: bool = False):
     )
 
     # ------------------------------------------------------------------
-    # 6. (Optional) Optuna hyperparameter tuning
+    # 7. (Optional) Optuna hyperparameter tuning
     # ------------------------------------------------------------------
     if tune and "xgboost" in model_cfg["active"]:
         logger.info("Running Optuna hyperparameter tuning...")
@@ -140,13 +156,13 @@ def main(tune: bool = False):
         model_cfg["xgboost"] = {k: v for k, v in best_params.items() if k not in ("scale_pos_weight", "eval_metric", "random_state", "n_jobs")}
 
     # ------------------------------------------------------------------
-    # 7. Train model(s)
+    # 8. Train model(s)
     # ------------------------------------------------------------------
     logger.info("Training model(s): %s", model_cfg["active"])
     model, train_meta = train_model(X_train_proc, y_train.values, config)
 
     # ------------------------------------------------------------------
-    # 8. Evaluate
+    # 9. Evaluate
     # ------------------------------------------------------------------
     threshold = model_cfg["threshold"]
     eval_results = evaluate_model(model, X_test_proc, y_test.values, threshold)
@@ -160,20 +176,30 @@ def main(tune: bool = False):
         )
 
     # ------------------------------------------------------------------
-    # 9. SHAP explainability
+    # 10. SHAP explainability
     # ------------------------------------------------------------------
     shap_plot_path = _log_shap_summary(model, X_test_proc, feature_names)
 
     # ------------------------------------------------------------------
-    # 10. MLflow logging
+    # 11. MLflow logging
     # ------------------------------------------------------------------
     logger.info("Logging to MLflow...")
     import mlflow
     import mlflow.sklearn
     import mlflow.xgboost
 
-    mlflow.set_tracking_uri(config["mlflow"].get("mlruns_uri", "file://./mlruns"))
-    mlflow.set_experiment(config["mlflow"]["experiment_name"])
+    tracking_uri = config["mlflow"].get("tracking_uri", "sqlite:///mlflow.db")
+    artifact_uri = config["mlflow"].get("artifact_uri", f"file://{project_root}/artifacts")
+    experiment_name = config["mlflow"]["experiment_name"]
+
+    mlflow.set_tracking_uri(tracking_uri)
+
+    # Create experiment with artifact location if it doesn't exist
+    experiment = mlflow.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        mlflow.create_experiment(experiment_name, artifact_location=artifact_uri)
+
+    mlflow.set_experiment(experiment_name)
 
     with mlflow.start_run():
         # Parameters
@@ -226,15 +252,15 @@ def main(tune: bool = False):
         logger.info("MLflow logging complete.")
 
     # ------------------------------------------------------------------
-    # 11. Save local artifacts for serving
+    # 12. Save local artifacts
     # ------------------------------------------------------------------
-    model_dir = Path(paths["serving_model_dir"])
-    model_dir.mkdir(parents=True, exist_ok=True)
+    artifacts_dir = Path(paths["artifacts_dir"])
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
 
-    preprocessor_path = model_dir / "preprocessor.joblib"
-    model_path = model_dir / "model.ubj"
-    config_path = model_dir / "config.yaml"
-    feature_names_path = model_dir / "feature_names.json"
+    preprocessor_path = artifacts_dir / "preprocessor.joblib"
+    model_path = artifacts_dir / "model.ubj"
+    config_path = artifacts_dir / "config.yaml"
+    feature_names_path = artifacts_dir / "feature_names.json"
 
     joblib.dump(preprocessor, preprocessor_path)
     logger.info("Saved preprocessor to %s", preprocessor_path)
@@ -254,7 +280,7 @@ def main(tune: bool = False):
     logger.info("Saved feature names to %s", feature_names_path)
 
     logger.info("=" * 60)
-    logger.info("Training pipeline complete. Artifacts saved to %s", model_dir)
+    logger.info("Training pipeline complete. Artifacts saved to %s", artifacts_dir)
     logger.info("=" * 60)
 
 
