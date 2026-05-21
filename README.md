@@ -1,10 +1,12 @@
-# Customer Churn Prediction — MLOps Pipeline
+# Customer Churn ML
 
-End-to-end machine learning pipeline for predicting telecom customer churn. Built with **scikit-learn**, **XGBoost**, **Great Expectations**, **MLflow**, and **FastAPI**.
+End-to-end machine learning pipeline for predicting telecom customer churn.
+
+**Docs:** [`http://3.93.153.38:8000/docs`](http://3.93.153.38:8000/docs)
 
 ---
 
-## Overview
+## Project Overview
 
 This project predicts which customers are likely to churn (leave) a telecom service. It includes:
 
@@ -12,11 +14,12 @@ This project predicts which customers are likely to churn (leave) a telecom serv
 - **Feature engineering** (tenure groups, service counts, derived metrics)
 - **Model training** with configurable classifiers (Random Forest, LightGBM, XGBoost)
 - **Hyperparameter tuning** with Optuna
-- **Explainability** with SHAP summary plots
+- **Explainability** with SHAP (per-user feature importance + business recommendations)
 - **Experiment tracking** with MLflow
 - **Real-time serving** via FastAPI
-- **CI/CD** with GitHub Actions
-- **Containerisation** with Docker
+- **CI/CD** with GitHub Actions (test, train, deploy)
+- **Containerisation** with Docker + Docker Compose
+- **Production deployment** on AWS EC2
 
 ---
 
@@ -36,9 +39,10 @@ Raw CSV
 └────────┬───────────┘
          │
          ▼
-┌────────────────────┐
-│ Great Expectations │  ← 43 expectations: columns, categories, not-null
-└────────┬───────────┘
+┌─────────────────────────┐
+│    Data Validation      │  ← Great Expectations: 43 expectations
+│  (Great Expectations)   │     columns, categories, not-null
+└────────┬────────────────┘
          │
          ▼
 ┌────────────────────┐
@@ -46,10 +50,10 @@ Raw CSV
 └────────┬───────────┘
          │
          ▼
-┌──────────────────────────────┐
-│ sklearn ColumnTransformer    │  ← SimpleImputer + StandardScaler
-│   + OneHotEncoder            │     + binary passthrough
-└────────┬─────────────────────┘
+┌──────────────────────────────────┐
+│     Data Transformation          │  ← ColumnTransformer
+│  (Imputer + Scaler + OneHot)   │     binary passthrough
+└────────┬───────────────────────┘
          │
          ▼
 ┌─────────────────┐
@@ -58,7 +62,7 @@ Raw CSV
          │
          ▼
 ┌─────────────────────┐
-│  Evaluate + SHAP  │  ← classification report, threshold sweep, SHAP plot
+│  Evaluate + SHAP    │  ← classification report, threshold sweep, SHAP plot
 └────────┬────────────┘
          │
     ┌────┴────┐
@@ -69,9 +73,18 @@ Raw CSV
 └────────┘  └─────────────┘
     │
     ▼
-┌──────────────┐
-│ FastAPI Serve │  ← POST /predict
-└──────────────┘
+┌──────────────────────┐
+│ FastAPI Serve        │  ← POST /predict
+│ ├─ /health           │  ← POST /predict?explain=true
+│ ├─ /predict          │  ← POST /explain
+│ └─ /explain          │
+└──────────────────────┘
+    │
+    ▼
+┌──────────────────────────────┐
+│ SHAP Explainability          │  ← Top churn-driving features per user
+│ + Business Recommendations   │  ← Actionable retention advice
+└──────────────────────────────┘
 ```
 
 ---
@@ -96,7 +109,8 @@ customer-churn-ml/
 ├── mlflow.db                          # MLflow tracking database (SQLite)
 ├── notebooks/
 │   ├── eda.ipynb                      # Exploratory data analysis
-│   └── modeling.ipynb                 # Notebook prototype (refactored)
+│   ├── modeling.ipynb                 # Notebook prototype (refactored)
+│   └── shap_explainability.ipynb      # SHAP explainability analysis
 ├── outputs/                           # Generated artifacts (predictions, SHAP plots, evaluation reports)
 ├── scripts/
 │   ├── train.py                       # End-to-end training pipeline
@@ -106,7 +120,9 @@ customer-churn-ml/
 ├── src/customer_churn_ml/
 │   ├── app/
 │   │   ├── main.py                    # FastAPI application
-│   │   └── schemas.py                 # Pydantic request/response models
+│   │   ├── schemas.py                 # Pydantic request/response models
+│   │   ├── explain.py                 # SHAP per-user explainability
+│   │   └── recommendations.py         # Business recommendation engine
 │   ├── data/
 │   │   ├── ingestion.py               # CSV loading + cleaning
 │   │   ├── preprocess.py              # sklearn ColumnTransformer pipeline
@@ -126,12 +142,15 @@ customer-churn-ml/
 ├── tests/
 │   ├── test_ingestion.py
 │   ├── test_preprocess.py
-│   └── test_api.py
+│   ├── test_api.py
+│   └── test_recommendations.py        # Recommendation engine tests
 ├── .github/workflows/
 │   ├── ci.yml                         # pytest + ruff on push/PR
-│   └── train.yml                      # Automated training on config changes
+│   ├── train.yml                      # Automated training on config changes
+│   └── deploy.yml                     # Docker Hub → EC2 deployment
 ├── Dockerfile                         # Multi-stage container
-├── pyproject.toml                     # Dependencies + pytest config
+├── docker-compose.yml                 # EC2 deployment orchestration
+├── pyproject.toml                     # Dependencies + tool configs
 └── README.md                          # This file
 ```
 
@@ -199,7 +218,7 @@ python -m scripts.predict \
     --output outputs/my_predictions.csv
 ```
 
-### 5. Serve via FastAPI
+### 5. Serve via FastAPI (local)
 
 ```bash
 # Start the server
@@ -232,6 +251,36 @@ curl -X POST http://localhost:8000/predict \
     "monthly_charges": 29.85,
     "total_charges": 29.85
   }]'
+
+# Predict with explainability (returns SHAP-based recommendations for churners)
+curl -X POST "http://localhost:8000/predict?explain=true" \
+  -H "Content-Type: application/json" \
+  -d '[{
+    "gender": "Female",
+    "senior_citizen": 0,
+    "partner": "Yes",
+    "dependents": "No",
+    "tenure": 1,
+    "phone_service": "Yes",
+    "multiple_lines": "No",
+    "internet_service": "Fiber optic",
+    "online_security": "No",
+    "online_backup": "No",
+    "device_protection": "No",
+    "tech_support": "No",
+    "streaming_tv": "No",
+    "streaming_movies": "No",
+    "contract": "Month-to-month",
+    "paperless_billing": "Yes",
+    "payment_method": "Electronic check",
+    "monthly_charges": 85.0,
+    "total_charges": 85.0
+  }]'
+
+# Standalone explainability endpoint (returns top features + recommendations)
+curl -X POST http://localhost:8000/explain \
+  -H "Content-Type: application/json" \
+  -d '[{...same customer JSON...}]'
 ```
 
 ### 6. View MLflow experiments
@@ -241,6 +290,19 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```
 
 Open http://localhost:5000 to browse runs, metrics, and model artifacts.
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | API info + available endpoints |
+| `/health` | GET | Health check + model/explainability status |
+| `/predict` | POST | Batch churn prediction |
+| `/predict?explain=true` | POST | Batch prediction + SHAP recommendations for churners |
+| `/explain` | POST | Standalone SHAP breakdown + recommendations for any customer |
+| `/docs` | GET | Interactive Swagger UI (auto-generated) |
 
 ---
 
@@ -280,34 +342,103 @@ pytest tests/test_preprocess.py -v
 Tests cover:
 - **Ingestion**: column standardisation, type coercion, blank handling
 - **Preprocessing**: binary encoding, ColumnTransformer structure, no NaN output, feature name extraction
-- **API**: health endpoint, empty list validation, graceful degradation without artifacts
+- **API**: health endpoint, empty list validation, graceful degradation without artifacts, predictions with/without explainability
+- **Recommendations**: display name mapping, recommendation rules per feature, fallback behaviour
 
 ---
 
 ## Docker
 
-Build and run the containerised API:
+### Local development
 
 ```bash
 # Build
-docker build -t churn-api .
+docker build -t churney-api .
 
 # Run (mount model artifacts)
 docker run -p 8000:8000 \
   -v $(pwd)/artifacts:/app/artifacts \
-  churn-api
+  churney-api
+```
+
+### Production (Docker Compose on EC2)
+
+```bash
+# Uses docker-compose.yml
+docker compose up -d
 ```
 
 ---
 
 ## CI/CD
 
-Two GitHub Actions workflows are configured:
+Three GitHub Actions workflows are configured:
 
 | Workflow | Trigger | What it does |
 |----------|---------|-------------|
-| `ci.yml` | push / PR to `main` | Runs `pytest` and `ruff` linting |
+| `ci.yml` | push / PR to `main` | Runs `pytest` and `ruff` linting + formatting checks |
 | `train.yml` | push to `main` (config/src changes) | Runs full training pipeline, uploads model artifacts |
+| `deploy.yml` | manual (`workflow_dispatch`) | Builds Docker image → Docker Hub → deploys to AWS EC2 |
+
+---
+
+## Production Deployment (AWS EC2)
+
+The project includes a complete CI/CD pipeline for deploying to AWS EC2.
+
+### Architecture
+
+```
+GitHub Repo
+    │
+    ▼ (workflow_dispatch — manual trigger)
+┌─────────────────────────────┐
+│  GitHub Actions: deploy.yml │
+│  1. Train model with --tune   │
+│  2. Build Docker image        │
+│  3. Push to Docker Hub        │
+│  4. SCP artifacts/ → EC2      │
+│  5. SSH → pull & run          │
+└─────────────────────────────┘
+    │
+    ▼
+Docker Hub
+    │
+    ▼
+AWS EC2 (t3.small)
+┌─────────────────────────────┐
+│  Docker daemon              │
+│  ├── Image: churney-api     │
+│  └── Volume: ~/artifacts/   │
+│      → /app/artifacts        │
+└─────────────────────────────┘
+    │
+    ▼
+Port 8000 (public IP)
+```
+
+### Prerequisites
+
+1. **Docker Hub** account with an access token
+2. **AWS EC2** instance with:
+   - Ubuntu OS
+   - Docker + Docker Compose installed
+   - Security group allowing port 8000
+   - SSH key pair
+3. **GitHub Secrets** configured:
+   - `DOCKERHUB_USERNAME`
+   - `DOCKERHUB_TOKEN`
+   - `EC2_HOST` (public IP)
+   - `EC2_USER` (`ubuntu`)
+   - `EC2_SSH_KEY` (full `.pem` contents)
+
+### Deploy
+
+1. Go to **Actions → Deploy to EC2 → Run workflow**
+2. Enter a version tag (e.g., `1.0.0`, `1.0.1`)
+3. Click **Run workflow**
+4. Wait ~3–4 minutes (training + build + deploy)
+5. Verify: `curl http://<EC2_PUBLIC_IP>:8000/health`
 
 ---
 
@@ -322,7 +453,10 @@ Two GitHub Actions workflows are configured:
 | **`OneHotEncoder(drop='first')`** | Avoids collinearity in linear models |
 | **MLflow + local artifacts** | MLflow for experiment tracking; local files for FastAPI cold-start without a running MLflow server |
 | **SHAP on every run** | Explainability is not optional — stakeholders need to know *why* a customer is flagged |
+| **Per-user SHAP + recommendations** | Moves beyond summary plots to actionable, customer-specific retention advice |
 | **Great Expectations V3 (minimal)** | Data quality without the heavy setup of a full GE project |
+| **Docker + Docker Compose** | Reproducible local and production environments |
+| **GitHub Actions + EC2** | Simple, cost-effective production deployment without managed container orchestration |
 
 ---
 
