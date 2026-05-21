@@ -30,7 +30,7 @@ notebooks/*.html
 notebooks/*.nbconvert.ipynb
 
 # Documentation
-README.md
+# README.md is needed in the Docker build context for pyproject.toml
 
 # IDE
 .vscode/
