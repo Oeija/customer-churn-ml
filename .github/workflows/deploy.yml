@@ -1,0 +1,69 @@
+name: Deploy to EC2
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Docker image version (e.g., 1.0.0)"
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Train model
+        run: uv run python scripts/train.py --tune
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/churney-api:${{ inputs.version }} .
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/churney-api:${{ inputs.version }} ${{ secrets.DOCKERHUB_USERNAME }}/churney-api:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/churney-api:${{ inputs.version }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/churney-api:latest
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SCP artifacts to EC2
+        run: |
+          scp -i ~/.ssh/ec2_key.pem -r artifacts/* ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/artifacts/
+
+      - name: SCP docker-compose.yml to EC2
+        run: |
+          scp -i ~/.ssh/ec2_key.pem docker-compose.yml ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/docker-compose.yml
+
+      - name: Deploy on EC2
+        run: |
+          ssh -i ~/.ssh/ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            export VERSION=${{ inputs.version }}
+            cd ~
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/churney-api:${VERSION}
+            docker compose up -d
+          EOF
