@@ -56,7 +56,7 @@ def _load_xgb_model(model_path: str):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load preprocessor + model + SHAP explainer on startup; clear on shutdown."""
-    config = load_config()
+    config = load_config(validate_paths=False)
     _artifacts["config"] = config
     artifacts_dir = config["paths"]["artifacts_dir"]
     _artifacts["threshold"] = config["models"]["threshold"]

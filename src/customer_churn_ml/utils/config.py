@@ -6,11 +6,14 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
-def load_config(config_path: str = "config/config.yaml") -> dict:
+def load_config(config_path: str = "config/config.yaml", validate_paths: bool = True) -> dict:
     """Load project configuration from YAML.
 
     Args:
         config_path: Relative path from project root to the config file.
+        validate_paths: If True, raises FileNotFoundError when raw_data path
+            does not exist. Set to False in serving contexts where raw data
+            is not expected to be present.
 
     Returns:
         Nested dictionary with configuration values.
@@ -30,7 +33,7 @@ def load_config(config_path: str = "config/config.yaml") -> dict:
     for key, rel_path in paths.items():
         abs_path = PROJECT_ROOT / rel_path
         # Only validate existence for paths that are expected to exist already
-        if key in ("raw_data",) and not abs_path.exists():
+        if validate_paths and key in ("raw_data",) and not abs_path.exists():
             raise FileNotFoundError(f"Required path '{key}' does not exist: {abs_path}")
         config["paths"][key] = str(abs_path)
 
