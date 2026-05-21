@@ -6,7 +6,9 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 
-def load_config(config_path: str = "config/config.yaml", validate_paths: bool = True) -> dict:
+def load_config(
+    config_path: str = "config/config.yaml", validate_paths: bool = True
+) -> dict:
     """Load project configuration from YAML.
 
     Args:

@@ -41,9 +41,7 @@ def build_and_save_suite(output_dir: str = "great_expectations/expectations"):
         suite.add_expectation(ExpectColumnToExist(column=col))
 
     for col, values in categorical_expectations.items():
-        suite.add_expectation(
-            ExpectColumnValuesToBeInSet(column=col, value_set=values)
-        )
+        suite.add_expectation(ExpectColumnValuesToBeInSet(column=col, value_set=values))
 
     if "churn" in categorical_expectations:
         suite.add_expectation(ExpectColumnValuesToNotBeNull(column="churn"))

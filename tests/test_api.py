@@ -15,6 +15,7 @@ from customer_churn_ml.utils.config import load_config
 
 client = TestClient(app)
 
+
 # ---------------------------------------------------------------------------
 # Minimal mock model that returns a fixed probability
 # ---------------------------------------------------------------------------
@@ -90,27 +91,29 @@ class TestAPI:
         assert response.status_code == 422
 
     def test_predict_without_artifacts(self):
-        payload = [{
-            "gender": "Female",
-            "senior_citizen": 0,
-            "partner": "Yes",
-            "dependents": "No",
-            "tenure": 12,
-            "phone_service": "Yes",
-            "multiple_lines": "No",
-            "internet_service": "DSL",
-            "online_security": "No",
-            "online_backup": "Yes",
-            "device_protection": "No",
-            "tech_support": "No",
-            "streaming_tv": "No",
-            "streaming_movies": "No",
-            "contract": "Month-to-month",
-            "paperless_billing": "Yes",
-            "payment_method": "Electronic check",
-            "monthly_charges": 29.85,
-            "total_charges": 29.85,
-        }]
+        payload = [
+            {
+                "gender": "Female",
+                "senior_citizen": 0,
+                "partner": "Yes",
+                "dependents": "No",
+                "tenure": 12,
+                "phone_service": "Yes",
+                "multiple_lines": "No",
+                "internet_service": "DSL",
+                "online_security": "No",
+                "online_backup": "Yes",
+                "device_protection": "No",
+                "tech_support": "No",
+                "streaming_tv": "No",
+                "streaming_movies": "No",
+                "contract": "Month-to-month",
+                "paperless_billing": "Yes",
+                "payment_method": "Electronic check",
+                "monthly_charges": 29.85,
+                "total_charges": 29.85,
+            }
+        ]
         response = client.post("/predict", json=payload)
         assert response.status_code == 503
         assert "Model artifacts not loaded" in response.json()["detail"]
@@ -121,27 +124,29 @@ class TestAPI:
 # ---------------------------------------------------------------------------
 class TestPredictWithArtifacts:
     def test_predict_without_explain(self, mock_artifacts_high_churn):
-        payload = [{
-            "gender": "Female",
-            "senior_citizen": 0,
-            "partner": "Yes",
-            "dependents": "No",
-            "tenure": 12,
-            "phone_service": "Yes",
-            "multiple_lines": "No",
-            "internet_service": "DSL",
-            "online_security": "No",
-            "online_backup": "Yes",
-            "device_protection": "No",
-            "tech_support": "No",
-            "streaming_tv": "No",
-            "streaming_movies": "No",
-            "contract": "Month-to-month",
-            "paperless_billing": "Yes",
-            "payment_method": "Electronic check",
-            "monthly_charges": 29.85,
-            "total_charges": 29.85,
-        }]
+        payload = [
+            {
+                "gender": "Female",
+                "senior_citizen": 0,
+                "partner": "Yes",
+                "dependents": "No",
+                "tenure": 12,
+                "phone_service": "Yes",
+                "multiple_lines": "No",
+                "internet_service": "DSL",
+                "online_security": "No",
+                "online_backup": "Yes",
+                "device_protection": "No",
+                "tech_support": "No",
+                "streaming_tv": "No",
+                "streaming_movies": "No",
+                "contract": "Month-to-month",
+                "paperless_billing": "Yes",
+                "payment_method": "Electronic check",
+                "monthly_charges": 29.85,
+                "total_charges": 29.85,
+            }
+        ]
         response = client.post("/predict", json=payload)
         assert response.status_code == 200
         data = response.json()
@@ -151,27 +156,29 @@ class TestPredictWithArtifacts:
 
     def test_predict_with_explain_churner_no_explainer(self, mock_artifacts_high_churn):
         """explain=true but no SHAP explainer loaded → churn_flag=1, recommendations=None."""
-        payload = [{
-            "gender": "Female",
-            "senior_citizen": 0,
-            "partner": "Yes",
-            "dependents": "No",
-            "tenure": 12,
-            "phone_service": "Yes",
-            "multiple_lines": "No",
-            "internet_service": "DSL",
-            "online_security": "No",
-            "online_backup": "Yes",
-            "device_protection": "No",
-            "tech_support": "No",
-            "streaming_tv": "No",
-            "streaming_movies": "No",
-            "contract": "Month-to-month",
-            "paperless_billing": "Yes",
-            "payment_method": "Electronic check",
-            "monthly_charges": 29.85,
-            "total_charges": 29.85,
-        }]
+        payload = [
+            {
+                "gender": "Female",
+                "senior_citizen": 0,
+                "partner": "Yes",
+                "dependents": "No",
+                "tenure": 12,
+                "phone_service": "Yes",
+                "multiple_lines": "No",
+                "internet_service": "DSL",
+                "online_security": "No",
+                "online_backup": "Yes",
+                "device_protection": "No",
+                "tech_support": "No",
+                "streaming_tv": "No",
+                "streaming_movies": "No",
+                "contract": "Month-to-month",
+                "paperless_billing": "Yes",
+                "payment_method": "Electronic check",
+                "monthly_charges": 29.85,
+                "total_charges": 29.85,
+            }
+        ]
         response = client.post("/predict?explain=true", json=payload)
         assert response.status_code == 200
         data = response.json()
@@ -180,27 +187,29 @@ class TestPredictWithArtifacts:
 
     def test_predict_with_explain_non_churner(self, mock_artifacts_low_churn):
         """Non-churner should never get recommendations, even with explain=true."""
-        payload = [{
-            "gender": "Female",
-            "senior_citizen": 0,
-            "partner": "Yes",
-            "dependents": "No",
-            "tenure": 12,
-            "phone_service": "Yes",
-            "multiple_lines": "No",
-            "internet_service": "DSL",
-            "online_security": "No",
-            "online_backup": "Yes",
-            "device_protection": "No",
-            "tech_support": "No",
-            "streaming_tv": "No",
-            "streaming_movies": "No",
-            "contract": "Month-to-month",
-            "paperless_billing": "Yes",
-            "payment_method": "Electronic check",
-            "monthly_charges": 29.85,
-            "total_charges": 29.85,
-        }]
+        payload = [
+            {
+                "gender": "Female",
+                "senior_citizen": 0,
+                "partner": "Yes",
+                "dependents": "No",
+                "tenure": 12,
+                "phone_service": "Yes",
+                "multiple_lines": "No",
+                "internet_service": "DSL",
+                "online_security": "No",
+                "online_backup": "Yes",
+                "device_protection": "No",
+                "tech_support": "No",
+                "streaming_tv": "No",
+                "streaming_movies": "No",
+                "contract": "Month-to-month",
+                "paperless_billing": "Yes",
+                "payment_method": "Electronic check",
+                "monthly_charges": 29.85,
+                "total_charges": 29.85,
+            }
+        ]
         response = client.post("/predict?explain=true", json=payload)
         assert response.status_code == 200
         data = response.json()
@@ -209,27 +218,29 @@ class TestPredictWithArtifacts:
 
     def test_explain_without_explainer(self, mock_artifacts_high_churn):
         """/explain should 503 when no SHAP explainer is loaded."""
-        payload = [{
-            "gender": "Female",
-            "senior_citizen": 0,
-            "partner": "Yes",
-            "dependents": "No",
-            "tenure": 12,
-            "phone_service": "Yes",
-            "multiple_lines": "No",
-            "internet_service": "DSL",
-            "online_security": "No",
-            "online_backup": "Yes",
-            "device_protection": "No",
-            "tech_support": "No",
-            "streaming_tv": "No",
-            "streaming_movies": "No",
-            "contract": "Month-to-month",
-            "paperless_billing": "Yes",
-            "payment_method": "Electronic check",
-            "monthly_charges": 29.85,
-            "total_charges": 29.85,
-        }]
+        payload = [
+            {
+                "gender": "Female",
+                "senior_citizen": 0,
+                "partner": "Yes",
+                "dependents": "No",
+                "tenure": 12,
+                "phone_service": "Yes",
+                "multiple_lines": "No",
+                "internet_service": "DSL",
+                "online_security": "No",
+                "online_backup": "Yes",
+                "device_protection": "No",
+                "tech_support": "No",
+                "streaming_tv": "No",
+                "streaming_movies": "No",
+                "contract": "Month-to-month",
+                "paperless_billing": "Yes",
+                "payment_method": "Electronic check",
+                "monthly_charges": 29.85,
+                "total_charges": 29.85,
+            }
+        ]
         response = client.post("/explain", json=payload)
         assert response.status_code == 503
         assert "Explainability artifacts not loaded" in response.json()["detail"]

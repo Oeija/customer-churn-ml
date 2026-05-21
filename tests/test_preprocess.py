@@ -24,27 +24,33 @@ def dummy_config():
 
 @pytest.fixture
 def dummy_df():
-    return pd.DataFrame({
-        "gender": ["Male", "Female", "Male"],
-        "partner": ["Yes", "No", "Yes"],
-        "dependents": ["No", "No", "Yes"],
-        "phone_service": ["Yes", "No", "Yes"],
-        "paperless_billing": ["Yes", "Yes", "No"],
-        "tenure": [1, 34, 2],
-        "monthly_charges": [29.85, 56.95, 53.85],
-        "total_charges": [29.85, 1889.5, 108.15],
-        "senior_citizen": [0, 0, 0],
-        "multiple_lines": ["No", "No", "Yes"],
-        "internet_service": ["DSL", "DSL", "Fiber optic"],
-        "online_security": ["No", "Yes", "No"],
-        "online_backup": ["No", "Yes", "No"],
-        "device_protection": ["No", "Yes", "No"],
-        "tech_support": ["No", "No", "Yes"],
-        "streaming_tv": ["No", "No", "No"],
-        "streaming_movies": ["No", "No", "No"],
-        "contract": ["Month-to-month", "One year", "Month-to-month"],
-        "payment_method": ["Electronic check", "Mailed check", "Bank transfer (automatic)"],
-    })
+    return pd.DataFrame(
+        {
+            "gender": ["Male", "Female", "Male"],
+            "partner": ["Yes", "No", "Yes"],
+            "dependents": ["No", "No", "Yes"],
+            "phone_service": ["Yes", "No", "Yes"],
+            "paperless_billing": ["Yes", "Yes", "No"],
+            "tenure": [1, 34, 2],
+            "monthly_charges": [29.85, 56.95, 53.85],
+            "total_charges": [29.85, 1889.5, 108.15],
+            "senior_citizen": [0, 0, 0],
+            "multiple_lines": ["No", "No", "Yes"],
+            "internet_service": ["DSL", "DSL", "Fiber optic"],
+            "online_security": ["No", "Yes", "No"],
+            "online_backup": ["No", "Yes", "No"],
+            "device_protection": ["No", "Yes", "No"],
+            "tech_support": ["No", "No", "Yes"],
+            "streaming_tv": ["No", "No", "No"],
+            "streaming_movies": ["No", "No", "No"],
+            "contract": ["Month-to-month", "One year", "Month-to-month"],
+            "payment_method": [
+                "Electronic check",
+                "Mailed check",
+                "Bank transfer (automatic)",
+            ],
+        }
+    )
 
 
 class TestPreprocess:
@@ -79,9 +85,7 @@ class TestPreprocess:
     def test_preprocess_no_nan(self, dummy_df, dummy_config):
         X_train = dummy_df.copy()
         X_test = dummy_df.copy()
-        X_train_proc, X_test_proc, _ = preprocess_splits(
-            X_train, X_test, dummy_config
-        )
+        X_train_proc, X_test_proc, _ = preprocess_splits(X_train, X_test, dummy_config)
         # Use pandas isnull to handle mixed dtypes (int/float from OneHotEncoder + StandardScaler)
         assert not pd.isnull(X_train_proc).any()
         assert not pd.isnull(X_test_proc).any()

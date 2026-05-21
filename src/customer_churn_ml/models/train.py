@@ -104,7 +104,10 @@ def train_model(
 
         logger.info(
             "%s trained in %.2fs (samples=%d, features=%d).",
-            model_name, train_time, len(y_train), X_train.shape[1],
+            model_name,
+            train_time,
+            len(y_train),
+            X_train.shape[1],
         )
         trained_model = clf
 

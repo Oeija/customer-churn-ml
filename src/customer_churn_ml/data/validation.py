@@ -110,7 +110,9 @@ def validate_data(
     try:
         batch_definition = data_asset.get_batch_definition(batch_def_name)
     except (KeyError, LookupError, gx.exceptions.DataContextError):
-        batch_definition = data_asset.add_batch_definition_whole_dataframe(batch_def_name)
+        batch_definition = data_asset.add_batch_definition_whole_dataframe(
+            batch_def_name
+        )
 
     batch = batch_definition.get_batch(batch_parameters={"dataframe": df})
     results = batch.validate(suite)
@@ -118,13 +120,11 @@ def validate_data(
     success = results.success
 
     if success:
-        logger.info("GE validation passed (%d expectations checked).", len(results.results))
+        logger.info(
+            "GE validation passed (%d expectations checked).", len(results.results)
+        )
     else:
-        failed = [
-            r.expectation_config.type
-            for r in results.results
-            if not r.success
-        ]
+        failed = [r.expectation_config.type for r in results.results if not r.success]
         logger.warning("GE validation failed. Failed expectations: %s", failed)
 
     result_dict = {

@@ -35,8 +35,11 @@ def evaluate_model(
 
     logger.info(
         "Evaluation (threshold=%.2f) — precision=%.3f, recall=%.3f, f1=%.3f, roc_auc=%.3f",
-        threshold, metrics["precision"], metrics["recall"],
-        metrics["f1"], metrics["roc_auc"],
+        threshold,
+        metrics["precision"],
+        metrics["recall"],
+        metrics["f1"],
+        metrics["roc_auc"],
     )
 
     return {
@@ -71,7 +74,8 @@ def sweep_thresholds(
 
     logger.info(
         "Best F1=%.3f at threshold=%.2f",
-        sweep_df.loc[best_idx, "F1"], best_thresh,
+        sweep_df.loc[best_idx, "F1"],
+        best_thresh,
     )
 
     return {

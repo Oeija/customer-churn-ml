@@ -30,7 +30,9 @@ def evaluate_at_threshold(
     """
     y_pred = (y_proba >= threshold).astype(int)
     return {
-        "precision": precision_score(y_true, y_pred, pos_label=pos_label, zero_division=0),
+        "precision": precision_score(
+            y_true, y_pred, pos_label=pos_label, zero_division=0
+        ),
         "recall": recall_score(y_true, y_pred, pos_label=pos_label, zero_division=0),
         "f1": f1_score(y_true, y_pred, pos_label=pos_label, zero_division=0),
         "roc_auc": roc_auc_score(y_true, y_proba),

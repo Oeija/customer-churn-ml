@@ -15,29 +15,31 @@ from customer_churn_ml.data.ingestion import load_raw_data, standardise_columns
 @pytest.fixture
 def mock_raw_csv(tmp_path):
     """Create a minimal mock CSV mimicking the Telco dataset."""
-    df = pd.DataFrame({
-        "customerID": ["A1", "A2", "A3"],
-        "gender": ["Female", "Male", "Female"],
-        "SeniorCitizen": [0, 1, 0],
-        "Partner": ["Yes", "No", "Yes"],
-        "Dependents": ["No", "No", "Yes"],
-        "tenure": [1, 34, 2],
-        "PhoneService": ["No", "Yes", "Yes"],
-        "MultipleLines": ["No phone service", "No", "No"],
-        "InternetService": ["DSL", "DSL", "DSL"],
-        "OnlineSecurity": ["No", "Yes", "Yes"],
-        "OnlineBackup": ["No", "Yes", "No"],
-        "DeviceProtection": ["No", "Yes", "No"],
-        "TechSupport": ["No", "No", "No"],
-        "StreamingTV": ["No", "No", "No"],
-        "StreamingMovies": ["No", "No", "No"],
-        "Contract": ["Month-to-month", "One year", "Month-to-month"],
-        "PaperlessBilling": ["Yes", "No", "Yes"],
-        "PaymentMethod": ["Electronic check", "Mailed check", "Electronic check"],
-        "MonthlyCharges": [29.85, 56.95, 53.85],
-        "TotalCharges": ["29.85", "1889.5", ""],  # blank string for tenure=0 case
-        "Churn": ["No", "No", "Yes"],
-    })
+    df = pd.DataFrame(
+        {
+            "customerID": ["A1", "A2", "A3"],
+            "gender": ["Female", "Male", "Female"],
+            "SeniorCitizen": [0, 1, 0],
+            "Partner": ["Yes", "No", "Yes"],
+            "Dependents": ["No", "No", "Yes"],
+            "tenure": [1, 34, 2],
+            "PhoneService": ["No", "Yes", "Yes"],
+            "MultipleLines": ["No phone service", "No", "No"],
+            "InternetService": ["DSL", "DSL", "DSL"],
+            "OnlineSecurity": ["No", "Yes", "Yes"],
+            "OnlineBackup": ["No", "Yes", "No"],
+            "DeviceProtection": ["No", "Yes", "No"],
+            "TechSupport": ["No", "No", "No"],
+            "StreamingTV": ["No", "No", "No"],
+            "StreamingMovies": ["No", "No", "No"],
+            "Contract": ["Month-to-month", "One year", "Month-to-month"],
+            "PaperlessBilling": ["Yes", "No", "Yes"],
+            "PaymentMethod": ["Electronic check", "Mailed check", "Electronic check"],
+            "MonthlyCharges": [29.85, 56.95, 53.85],
+            "TotalCharges": ["29.85", "1889.5", ""],  # blank string for tenure=0 case
+            "Churn": ["No", "No", "Yes"],
+        }
+    )
     path = tmp_path / "mock_telco.csv"
     df.to_csv(path, index=False)
     return path

@@ -19,6 +19,7 @@ from pathlib import Path
 
 import joblib
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -88,6 +89,7 @@ def main(tune: bool = False):
     # 3. Feature engineering (before validation so derived columns exist)
     # ------------------------------------------------------------------
     from customer_churn_ml.features.build_features import build_features
+
     df = build_features(df, config)
     logger.info("Feature engineering complete. Shape: %s", df.shape)
 
@@ -117,9 +119,7 @@ def main(tune: bool = False):
         random_state=split_cfg["random_state"],
         stratify=y if split_cfg.get("stratify", True) else None,
     )
-    logger.info(
-        "Split — train: %s, test: %s", X_train.shape, X_test.shape
-    )
+    logger.info("Split — train: %s, test: %s", X_train.shape, X_test.shape)
 
     # ------------------------------------------------------------------
     # 5. Save processed data for reproducibility
@@ -129,8 +129,12 @@ def main(tune: bool = False):
 
     X_train.to_parquet(processed_dir / "train_features.parquet", index=False)
     X_test.to_parquet(processed_dir / "test_features.parquet", index=False)
-    y_train.to_frame("churn").to_parquet(processed_dir / "train_labels.parquet", index=False)
-    y_test.to_frame("churn").to_parquet(processed_dir / "test_labels.parquet", index=False)
+    y_train.to_frame("churn").to_parquet(
+        processed_dir / "train_labels.parquet", index=False
+    )
+    y_test.to_frame("churn").to_parquet(
+        processed_dir / "test_labels.parquet", index=False
+    )
     logger.info("Saved processed data to %s", processed_dir)
 
     # ------------------------------------------------------------------
@@ -152,7 +156,11 @@ def main(tune: bool = False):
             "Best recall=%.4f | Params=%s", tune_results["best_recall"], best_params
         )
         # Override config for training
-        model_cfg["xgboost"] = {k: v for k, v in best_params.items() if k not in ("scale_pos_weight", "eval_metric", "random_state", "n_jobs")}
+        model_cfg["xgboost"] = {
+            k: v
+            for k, v in best_params.items()
+            if k not in ("scale_pos_weight", "eval_metric", "random_state", "n_jobs")
+        }
 
     # ------------------------------------------------------------------
     # 8. Train model(s)
@@ -170,9 +178,7 @@ def main(tune: bool = False):
     thresholds = model_cfg.get("thresholds_to_evaluate", [])
     if thresholds:
         sweep = sweep_thresholds(model, X_test_proc, y_test.values, thresholds)
-        logger.info(
-            "\nThreshold sweep:\n%s", sweep["sweep_df"].to_string(index=False)
-        )
+        logger.info("\nThreshold sweep:\n%s", sweep["sweep_df"].to_string(index=False))
 
     # ------------------------------------------------------------------
     # 10. SHAP explainability
@@ -188,7 +194,9 @@ def main(tune: bool = False):
     import mlflow.xgboost
 
     tracking_uri = config["mlflow"].get("tracking_uri", "sqlite:///mlflow.db")
-    artifact_uri = config["mlflow"].get("artifact_uri", f"file://{project_root}/artifacts")
+    artifact_uri = config["mlflow"].get(
+        "artifact_uri", f"file://{project_root}/artifacts"
+    )
     experiment_name = config["mlflow"]["experiment_name"]
 
     mlflow.set_tracking_uri(tracking_uri)
@@ -204,7 +212,10 @@ def main(tune: bool = False):
         # Parameters
         mlflow.log_params(train_meta)
         mlflow.log_param("threshold", threshold)
-        mlflow.log_param("preprocessor", "ColumnTransformer with SimpleImputer + StandardScaler + OneHotEncoder + FeatureEngineering")
+        mlflow.log_param(
+            "preprocessor",
+            "ColumnTransformer with SimpleImputer + StandardScaler + OneHotEncoder + FeatureEngineering",
+        )
         mlflow.log_param("n_features", len(feature_names))
         if tune:
             mlflow.log_param("optuna_tuned", True)
@@ -221,17 +232,22 @@ def main(tune: bool = False):
             os.remove(shap_plot_path)
 
         # Full pipeline artifact
-        from customer_churn_ml.data.preprocess import build_preprocessor, encode_binary_columns
+        from customer_churn_ml.data.preprocess import (
+            build_preprocessor,
+            encode_binary_columns,
+        )
         from sklearn.pipeline import Pipeline as SklearnPipeline
 
         X_train_enc = encode_binary_columns(X_train, config["features"]["binary_map"])
         preprocessor = build_preprocessor(config)
         preprocessor.fit(X_train_enc)
 
-        full_pipeline = SklearnPipeline([
-            ("preprocessor", preprocessor),
-            ("classifier", model),
-        ])
+        full_pipeline = SklearnPipeline(
+            [
+                ("preprocessor", preprocessor),
+                ("classifier", model),
+            ]
+        )
         mlflow.sklearn.log_model(
             full_pipeline,
             artifact_path=config["mlflow"]["artifact_paths"]["full_pipeline"],

@@ -33,9 +33,7 @@ def add_tenure_group(
         include_lowest=include_lowest,
         right=right,
     )
-    logger.info(
-        "Added tenure_group (bins=%s, labels=%s).", bins, labels
-    )
+    logger.info("Added tenure_group (bins=%s, labels=%s).", bins, labels)
     return df
 
 
@@ -54,9 +52,7 @@ def add_num_services(
     """
     df = df.copy()
     df["num_services"] = (df[service_columns] == "Yes").sum(axis=1).astype(int)
-    logger.info(
-        "Added num_services from columns %s.", service_columns
-    )
+    logger.info("Added num_services from columns %s.", service_columns)
     return df
 
 
@@ -146,6 +142,14 @@ def build_features(df: pd.DataFrame, config: dict) -> pd.DataFrame:
     logger.info(
         "Feature engineering complete. Shape: %s, new columns: %s",
         df.shape,
-        [c for c in df.columns if c not in config["features"]["numeric"] + config["features"]["binary"] + config["features"]["categorical"] + [config["features"]["target"]]],
+        [
+            c
+            for c in df.columns
+            if c
+            not in config["features"]["numeric"]
+            + config["features"]["binary"]
+            + config["features"]["categorical"]
+            + [config["features"]["target"]]
+        ],
     )
     return df

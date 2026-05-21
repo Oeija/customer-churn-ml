@@ -38,7 +38,9 @@ def load_shap_explainer(model: Any) -> Optional[Any]:
         logger.info("SHAP TreeExplainer initialized successfully.")
         return explainer
     except Exception as exc:
-        logger.warning("Could not create TreeExplainer: %s. Explainability disabled.", exc)
+        logger.warning(
+            "Could not create TreeExplainer: %s. Explainability disabled.", exc
+        )
         return None
 
 
@@ -53,7 +55,9 @@ def load_feature_names(artifacts_dir: str) -> Optional[List[str]]:
     """
     path = os.path.join(artifacts_dir, "feature_names.json")
     if not os.path.exists(path):
-        logger.warning("feature_names.json not found at %s. Explainability disabled.", path)
+        logger.warning(
+            "feature_names.json not found at %s. Explainability disabled.", path
+        )
         return None
     with open(path, "r") as f:
         names = json.load(f)

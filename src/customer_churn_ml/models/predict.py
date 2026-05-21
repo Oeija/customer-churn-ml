@@ -43,6 +43,7 @@ def load_artifacts(
 
     try:
         from xgboost import XGBClassifier
+
         model = XGBClassifier()
         model._estimator_type = "classifier"
         model.load_model(str(model_path))
@@ -82,6 +83,8 @@ def predict(
 
     logger.info(
         "Predicted on %d rows. Predicted churners: %d (threshold=%.2f).",
-        len(result), flag.sum(), threshold,
+        len(result),
+        flag.sum(),
+        threshold,
     )
     return result

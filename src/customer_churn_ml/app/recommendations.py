@@ -62,6 +62,7 @@ def _get_display_name(feature_name: str) -> str:
 # Return None when the rule does not apply.
 # ---------------------------------------------------------------------------
 
+
 def _recommend_tenure(feature_name: str, raw_row: pd.Series) -> Optional[str]:
     if feature_name != "tenure":
         return None
@@ -170,7 +171,9 @@ def _recommend_num_services(feature_name: str, raw_row: pd.Series) -> Optional[s
     return None
 
 
-def _recommend_paperless_billing(feature_name: str, raw_row: pd.Series) -> Optional[str]:
+def _recommend_paperless_billing(
+    feature_name: str, raw_row: pd.Series
+) -> Optional[str]:
     if feature_name != "paperless_billing":
         return None
     if raw_row.get("paperless_billing") == "Yes":
@@ -218,7 +221,9 @@ def _recommend_online_backup(feature_name: str, raw_row: pd.Series) -> Optional[
     return None
 
 
-def _recommend_device_protection(feature_name: str, raw_row: pd.Series) -> Optional[str]:
+def _recommend_device_protection(
+    feature_name: str, raw_row: pd.Series
+) -> Optional[str]:
     if feature_name == "device_protection_Yes":
         if raw_row.get("device_protection") != "Yes":
             return "Offer device protection add-on as a low-friction upsell to improve retention."

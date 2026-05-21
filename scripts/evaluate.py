@@ -26,6 +26,7 @@ logger = get_logger(__name__)
 
 def _load_xgb_model(model_path: str):
     from xgboost import XGBClassifier
+
     model = XGBClassifier()
     model._estimator_type = "classifier"
     model.load_model(model_path)
@@ -74,6 +75,7 @@ def main(data_path: str = None, fresh_split: bool = False):
         y_test = pd.read_parquet(test_labels_path)["churn"]
         # Apply binary encoding only (feature engineering already done)
         from customer_churn_ml.data.preprocess import encode_binary_columns
+
         binary_map = config["features"].get("binary_map", {})
         X_test = encode_binary_columns(X_test, binary_map)
     else:
@@ -91,7 +93,8 @@ def main(data_path: str = None, fresh_split: bool = False):
 
         split_cfg = config["split"]
         _, X_test, _, y_test = train_test_split(
-            X, y,
+            X,
+            y,
             test_size=split_cfg["test_size"],
             random_state=split_cfg["random_state"],
             stratify=y if split_cfg.get("stratify", True) else None,
@@ -130,11 +133,13 @@ def main(data_path: str = None, fresh_split: bool = False):
     thresholds = config["models"].get("thresholds_to_evaluate", [])
     if thresholds:
         sweep = sweep_thresholds(model, X_test_proc, y_test.values, thresholds)
-        report_lines.extend([
-            "",
-            "Threshold Sweep:",
-            sweep["sweep_df"].to_string(index=False),
-        ])
+        report_lines.extend(
+            [
+                "",
+                "Threshold Sweep:",
+                sweep["sweep_df"].to_string(index=False),
+            ]
+        )
 
     report_text = "\n".join(report_lines)
     print("\n" + report_text)

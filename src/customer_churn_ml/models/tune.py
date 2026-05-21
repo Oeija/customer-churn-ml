@@ -81,7 +81,8 @@ def tune_xgboost(
 
     # Internal train/val split for tuning
     X_tr, X_val, y_tr, y_val = train_test_split(
-        X_train, y_train,
+        X_train,
+        y_train,
         test_size=val_size,
         random_state=42,
         stratify=y_train,
@@ -95,16 +96,19 @@ def tune_xgboost(
     study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
 
     best_params = study.best_params.copy()
-    best_params.update({
-        "random_state": 42,
-        "n_jobs": -1,
-        "scale_pos_weight": scale_pos_weight,
-        "eval_metric": "logloss",
-    })
+    best_params.update(
+        {
+            "random_state": 42,
+            "n_jobs": -1,
+            "scale_pos_weight": scale_pos_weight,
+            "eval_metric": "logloss",
+        }
+    )
 
     logger.info(
         "Optuna tuning complete. Best recall=%.4f | Params=%s",
-        study.best_value, best_params,
+        study.best_value,
+        best_params,
     )
 
     return {

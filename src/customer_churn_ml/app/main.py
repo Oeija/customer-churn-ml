@@ -134,9 +134,7 @@ async def root() -> dict:
 @app.get("/health")
 async def health() -> dict:
     """Health check endpoint."""
-    healthy = (
-        _artifacts["preprocessor"] is not None and _artifacts["model"] is not None
-    )
+    healthy = _artifacts["preprocessor"] is not None and _artifacts["model"] is not None
     return {
         "status": "healthy" if healthy else "unhealthy",
         "model_loaded": healthy,
@@ -202,7 +200,9 @@ def _make_prediction(
 @app.post("/predict", response_model=BatchPredictionResponse)
 async def predict(
     customers: List[CustomerFeatures],
-    explain: bool = Query(False, description="Include SHAP-based recommendations for churners"),
+    explain: bool = Query(
+        False, description="Include SHAP-based recommendations for churners"
+    ),
 ) -> BatchPredictionResponse:
     """Predict churn probability for a batch of customers.
 
