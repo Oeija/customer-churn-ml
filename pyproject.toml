@@ -27,6 +27,7 @@ dependencies = [
 dev = [
     "pytest",
     "httpx",
+    "ruff",
 ]
 notebook = [
     "lightgbm>=4.0,<5.0",
