@@ -1,0 +1,40 @@
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Generated artifacts (not needed in image)
+artifacts/*
+!artifacts/.gitkeep
+data/processed/*.parquet
+data/processed/*.csv
+outputs/*
+!outputs/.gitkeep
+mlflow.db
+mlruns/
+
+# Notebooks
+notebooks/*.html
+notebooks/*.nbconvert.ipynb
+
+# Documentation
+README.md
+
+# IDE
+.vscode/
+.idea/
+
+# CI/CD
+.github/
