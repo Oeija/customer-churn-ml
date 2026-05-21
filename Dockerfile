@@ -12,8 +12,8 @@ COPY pyproject.toml uv.lock README.md ./
 # Copy source code (needed for editable install via -e ".[dev]")
 COPY src/ ./src/
 
-# Install dependencies into a virtual environment
-RUN uv venv .venv && uv pip install --python .venv/bin/python -e ".[dev]"
+# Install dependencies into a virtual environment (include notebook extras for xgboost/shap)
+RUN uv venv .venv && uv pip install --python .venv/bin/python -e ".[dev,notebook]"
 
 # ---- Runtime stage ----
 FROM python:3.12-slim AS runtime
