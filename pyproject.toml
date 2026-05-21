@@ -19,6 +19,7 @@ dependencies = [
     "python-dotenv",
     "joblib",
     "great-expectations",
+    "shap",
 ]
 
 [project.optional-dependencies]
