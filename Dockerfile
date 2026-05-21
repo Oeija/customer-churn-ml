@@ -6,8 +6,11 @@ WORKDIR /app
 # Install uv
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files
-COPY pyproject.toml uv.lock ./
+# Copy dependency files + package metadata (needed for editable install)
+COPY pyproject.toml uv.lock README.md ./
+
+# Copy source code (needed for editable install via -e ".[dev]")
+COPY src/ ./src/
 
 # Install dependencies into a virtual environment
 RUN uv venv .venv && uv pip install --python .venv/bin/python -e ".[dev]"
