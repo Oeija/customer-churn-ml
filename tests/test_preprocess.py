@@ -3,7 +3,6 @@
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -13,7 +12,6 @@ sys.path.insert(0, str(project_root / "src"))
 from customer_churn_ml.data.preprocess import (
     build_preprocessor,
     encode_binary_columns,
-    get_feature_names,
     preprocess_splits,
 )
 from customer_churn_ml.utils.config import load_config

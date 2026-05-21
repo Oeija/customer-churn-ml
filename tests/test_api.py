@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root / "src"))
 
-from customer_churn_ml.app.main import _artifacts, app
+from customer_churn_ml.app.main import app
 from customer_churn_ml.utils.config import load_config
 
 client = TestClient(app)

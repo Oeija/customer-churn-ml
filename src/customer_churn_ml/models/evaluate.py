@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 import numpy as np
-from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.metrics import classification_report
 
 from customer_churn_ml.utils.logger import get_logger
 from customer_churn_ml.utils.metrics import evaluate_at_threshold, threshold_sweep

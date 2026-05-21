@@ -41,3 +41,6 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[tool.ruff.lint]
+ignore = ["E402"]  # Module level import not at top — intentional for sys.path.insert pattern

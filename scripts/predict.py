@@ -9,7 +9,6 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-import joblib
 import pandas as pd
 
 project_root = Path(__file__).resolve().parents[1]

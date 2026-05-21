@@ -17,7 +17,6 @@ project_root = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(project_root / "src"))
 
 from customer_churn_ml.data.ingestion import load_raw_data
-from customer_churn_ml.data.preprocess import preprocess_splits
 from customer_churn_ml.models.evaluate import evaluate_model, sweep_thresholds
 from customer_churn_ml.utils.config import load_config
 from customer_churn_ml.utils.logger import get_logger
