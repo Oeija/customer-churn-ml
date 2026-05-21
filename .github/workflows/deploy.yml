@@ -65,5 +65,5 @@ jobs:
             export VERSION=${{ inputs.version }}
             cd ~
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/churney-api:${VERSION}
-            docker compose up -d
+            docker compose up -d --force-recreate
           EOF
