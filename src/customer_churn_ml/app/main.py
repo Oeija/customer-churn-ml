@@ -8,6 +8,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 
 from customer_churn_ml.app.explain import (
     explain_prediction,
@@ -103,6 +104,15 @@ app = FastAPI(
     description="Real-time churn probability scoring for telecom customers.",
     version="0.1.0",
     lifespan=lifespan,
+)
+
+# Allow all origins for frontend access (restrict in production if needed)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
