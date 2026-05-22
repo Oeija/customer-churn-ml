@@ -16,10 +16,31 @@ This project predicts which customers are likely to churn (leave) a telecom serv
 - **Hyperparameter tuning** with Optuna
 - **Explainability** with SHAP (per-user feature importance + business recommendations)
 - **Experiment tracking** with MLflow
-- **Real-time serving** via FastAPI
+- **Real-time serving** via FastAPI with Pydantic request/response validation
 - **CI/CD** with GitHub Actions (test, train, deploy)
 - **Containerisation** with Docker + Docker Compose
 - **Production deployment** on AWS EC2
+
+---
+
+## Tech Stack
+
+| Layer | Libraries & Tools |
+|-------|-------------------|
+| **Core ML / Data** | pandas, NumPy, scikit-learn |
+| **Model Libraries** | XGBoost, LightGBM, Random Forest |
+| **Hyperparameter Tuning** | Optuna |
+| **API / Serving** | FastAPI, Pydantic, Uvicorn |
+| **Experiment Tracking** | MLflow |
+| **Data Quality** | Great Expectations |
+| **Explainability** | SHAP, numba |
+| **Serialization** | Joblib |
+| **Configuration** | PyYAML |
+| **Visualization** | Matplotlib |
+| **Storage** | Parquet (processed splits) |
+| **DevOps** | Docker, Docker Compose, GitHub Actions |
+| **Dev Tools** | uv (dependency management), pytest, ruff, httpx |
+| **Cloud** | AWS EC2 |
 
 ---
 
@@ -98,7 +119,7 @@ customer-churn-ml/
 ├── data/
 │   ├── raw/
 │   │   └── telco-customer-churn-raw.csv
-│   └── processed/                     # Feature-engineered train/test splits (ignored by git)
+│   └── processed/                     # Feature-engineered train/test splits as Parquet (ignored by git)
 │       ├── train_features.parquet
 │       ├── test_features.parquet
 │       ├── train_labels.parquet
@@ -120,7 +141,7 @@ customer-churn-ml/
 ├── src/customer_churn_ml/
 │   ├── app/
 │   │   ├── main.py                    # FastAPI application
-│   │   ├── schemas.py                 # Pydantic request/response models
+│   │   ├── schemas.py                 # Pydantic request/response models (validated API contracts)
 │   │   ├── explain.py                 # SHAP per-user explainability
 │   │   └── recommendations.py         # Business recommendation engine
 │   ├── data/
@@ -138,7 +159,7 @@ customer-churn-ml/
 │       ├── config.py                  # YAML loader
 │       ├── logger.py                  # Structured logging
 │       └── metrics.py                 # Evaluation helpers
-├── artifacts/                         # Saved model artifacts (ignored by git)
+├── artifacts/                         # Saved model artifacts — Joblib preprocessor + UBJ model (ignored by git)
 ├── tests/
 │   ├── test_ingestion.py
 │   ├── test_preprocess.py
@@ -456,6 +477,7 @@ Port 8000 (public IP)
 | **Per-user SHAP + recommendations** | Moves beyond summary plots to actionable, customer-specific retention advice |
 | **Great Expectations V3 (minimal)** | Data quality without the heavy setup of a full GE project |
 | **Docker + Docker Compose** | Reproducible local and production environments |
+| **Pydantic schemas** | Type-safe API contracts with automatic validation and Swagger/OpenAPI documentation generation |
 | **GitHub Actions + EC2** | Simple, cost-effective production deployment without managed container orchestration |
 
 ---
